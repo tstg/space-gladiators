@@ -5,10 +5,12 @@ import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
@@ -34,12 +36,14 @@ import com.mygdx.game.bullet.MotionState;
 import com.mygdx.game.components.AnimationComponent;
 import com.mygdx.game.components.BulletComponent;
 import com.mygdx.game.components.CharacterComponent;
+import com.mygdx.game.components.DieParticleComponent;
 import com.mygdx.game.components.EnemyComponent;
 import com.mygdx.game.components.GunComponent;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.PlayerComponent;
 import com.mygdx.game.components.StatusComponent;
 import com.mygdx.game.systems.BulletSystem;
+import com.mygdx.game.systems.RenderSystem;
 
 /**
  * Created by Anonym on 2019/1/30.
@@ -59,6 +63,9 @@ public class EntityFactory {
     private static Texture playerTexture;
     private static Model playerModel;
     private static Model enemyModel;
+    public static RenderSystem renderSystem;
+
+    private static ModelComponent enemyModelComponent;
 //    private static Model boxModel;
 
     static {
@@ -154,23 +161,37 @@ public class EntityFactory {
 //        entity.add(new EnemyComponent(EnemyComponent.STATE.HUNTING));
 //        entity.add(new StatusComponent());
         Entity entity = new Entity();
-        ModelLoader<?> modelLoader = new G3dModelLoader(new JsonReader());
-        ModelData modelData = modelLoader.loadModelData(Gdx.files.internal("data/monster.g3dj"));
+
         if (enemyModel == null) {
-//            System.out.println("enemyModel == null");
+            ModelLoader<?> modelLoader = new G3dModelLoader(new JsonReader());
+            ModelData modelData = modelLoader.loadModelData(Gdx.files.internal("data/monster.g3dj"));
             enemyModel = new Model(modelData, new TextureProvider.FileTextureProvider());
             // the model is much bigger than we need it to be
             for (Node node : enemyModel.nodes) {
                 node.scale.scl(0.0025f);
             }
             enemyModel.calculateTransforms();
+
+            // add an attribute to the enemy's material to make it fade out.
+            enemyModelComponent = new ModelComponent(enemyModel, x, y, z);
+
+            Material material = enemyModelComponent.instance.materials.get(0);
+            BlendingAttribute blendingAttribute;
+            material.set(blendingAttribute = new BlendingAttribute(
+                    GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+            enemyModelComponent.blendingAttribute = blendingAttribute;
         }
-        ModelComponent modelComponent = new ModelComponent(enemyModel, x, y, z);
-        entity.add(modelComponent);
+        Material material = enemyModelComponent.instance.materials.get(0);
+        ((BlendingAttribute) material.get(BlendingAttribute.Type)).opacity = 1;
+
+//        ModelComponent modelComponent = new ModelComponent(enemyModel, x, y, z);
+//        entity.add(modelComponent);
+        enemyModelComponent.instance.transform.set(enemyModelComponent.matrix4.setTranslation(x, y, z));
+        entity.add(enemyModelComponent);
 
         CharacterComponent characterComponent = new CharacterComponent();
         characterComponent.ghostObject = new btPairCachingGhostObject();
-        characterComponent.ghostObject.setWorldTransform(modelComponent.instance.transform);
+        characterComponent.ghostObject.setWorldTransform(enemyModelComponent.instance.transform);
         characterComponent.ghostShape = new btCapsuleShape(2f, 2f);
         characterComponent.ghostObject.setCollisionShape(characterComponent.ghostShape);
         characterComponent.ghostObject.setCollisionFlags(btCollisionObject.CollisionFlags.CF_CHARACTER_OBJECT);
@@ -187,12 +208,14 @@ public class EntityFactory {
                 entity.getComponent(CharacterComponent.class).characterController);
         entity.add(new EnemyComponent(EnemyComponent.STATE.HUNTING));
 
-        AnimationComponent animationComponent = new AnimationComponent(modelComponent.instance);
+        AnimationComponent animationComponent = new AnimationComponent(enemyModelComponent.instance);
         animationComponent.animate(
                 EnemyAnimations.id, EnemyAnimations.offsetRun1, EnemyAnimations.durationRun1, -1, 1);
         entity.add(animationComponent);
 
         entity.add(new StatusComponent(animationComponent));
+
+        entity.add(new DieParticleComponent(renderSystem.particleSystem));
 
         return entity;
     }

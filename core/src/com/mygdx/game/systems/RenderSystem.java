@@ -13,6 +13,8 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
+import com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch;
 import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.Core;
 import com.mygdx.game.Settings;
@@ -43,6 +45,8 @@ public class RenderSystem extends EntitySystem {
 
     private DirectionalShadowLight shadowLight;
 
+    public static ParticleSystem particleSystem;
+
     public RenderSystem() {
         perspectiveCamera = new PerspectiveCamera(FOV, Core.VIRTUAL_WIDTH, Core.VIRTUAL_HEIGHT);
         perspectiveCamera.far = 10000f;
@@ -58,6 +62,11 @@ public class RenderSystem extends EntitySystem {
         batch = new ModelBatch();
         gunCamera = new PerspectiveCamera(FOV, Core.VIRTUAL_WIDTH, Core.VIRTUAL_HEIGHT);
         gunCamera.far = 100f;
+
+        particleSystem = ParticleSystem.get();
+        BillboardParticleBatch billboardParticleBatch = new BillboardParticleBatch();
+        billboardParticleBatch.setCamera(perspectiveCamera);
+        particleSystem.add(billboardParticleBatch);
     }
 
 //    public RenderSystem(ModelBatch batch, Environment environment) {
@@ -110,7 +119,18 @@ public class RenderSystem extends EntitySystem {
             }
         }
         batch.end();
+        renderParticleEffects();
         drawGun(delta);
+    }
+
+    private void renderParticleEffects() {
+        batch.begin(perspectiveCamera);
+        particleSystem.update();  /* technically not necessary for rendering */
+        particleSystem.begin();
+        particleSystem.draw();
+        particleSystem.end();
+        batch.render(particleSystem);
+        batch.end();
     }
 
     private void drawGun(float delta) {

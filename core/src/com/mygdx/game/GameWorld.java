@@ -127,6 +127,7 @@ public class GameWorld {
         engine = new Engine();
 //        engine.addSystem(renderSystem = new RenderSystem(batch, environment));
         engine.addSystem(renderSystem = new RenderSystem());
+        EntityFactory.renderSystem = renderSystem;
         engine.addSystem(bulletSystem = new BulletSystem());
 //        engine.addSystem(playerSystem = new PlayerSystem(this, cam, gameUI));
         engine.addSystem(playerSystem = new PlayerSystem(this,

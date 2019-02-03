@@ -8,19 +8,22 @@ import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.ashley.core.EntityListener;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.utils.ImmutableArray;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleController;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
+import com.badlogic.gdx.graphics.g3d.particles.emitters.RegularEmitter;
 import com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.GameWorld;
 import com.mygdx.game.components.CharacterComponent;
+import com.mygdx.game.components.DieParticleComponent;
 import com.mygdx.game.components.EnemyComponent;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.PlayerComponent;
 import com.mygdx.game.components.StatusComponent;
 import com.mygdx.game.managers.EntityFactory;
-
-import java.util.Random;
 
 import static com.badlogic.gdx.math.MathUtils.random;
 
@@ -37,7 +40,7 @@ public class EnemySystem extends EntitySystem implements EntityListener {
     private Engine engine;
     private GameWorld gameWorld;
     ComponentMapper<CharacterComponent> cm = ComponentMapper.getFor(CharacterComponent.class);
-    ComponentMapper<StatusComponent> sm = ComponentMapper.getFor(StatusComponent.class);
+//    ComponentMapper<StatusComponent> sm = ComponentMapper.getFor(StatusComponent.class);
 
     private float[] xSpawns = {12, -12, 70, -70};
     private float[] zSpawns = {-70, 70, -12, 12};
@@ -62,11 +65,39 @@ public class EnemySystem extends EntitySystem implements EntityListener {
 //                    gameWorld.bulletSystem, random.nextInt(40) - 20, 10, random.nextInt(40) - 20));
         }
         for (Entity e : entities) {
-            if (!sm.get(e).alive) {
-                return;
-            }
+//            if (!sm.get(e).alive) {
+//                return;
+//            }
             ModelComponent mod = e.getComponent(ModelComponent.class);
             ModelComponent playerModel = player.getComponent(ModelComponent.class);
+
+            //  If it's not alive, we will update the model component and it will starting fading
+            // out the enemy model.
+            if (!e.getComponent(StatusComponent.class).alive) {
+                mod.update(deltaTime);
+            }
+
+            if (!e.getComponent(StatusComponent.class).alive
+                    && !e.getComponent(DieParticleComponent.class).used) {
+                // it will play the same effect a bunch of times
+                e.getComponent(DieParticleComponent.class).used = true;
+                ParticleEffect effect =
+                        e.getComponent(DieParticleComponent.class).originalEffect.copy();
+                // set its emission mode to play once--for its live time (set in the particle editor
+                // by default to 3 seconds)
+                ((RegularEmitter) effect.getControllers().first().emitter)
+                        .setEmissionMode(RegularEmitter.EmissionMode.EnabledUntilCycleEnd);
+                effect.setTransform(e.getComponent(ModelComponent.class).instance.transform);
+                effect.scale(3.25f, 1, 1.5f);
+                effect.init();
+                effect.start();
+                RenderSystem.particleSystem.add(effect);
+            }
+
+            if (!e.getComponent(StatusComponent.class).alive) {
+                return;
+            }
+
             Vector3 playerPosition = new Vector3();
             Vector3 enemyPosition = new Vector3();
             playerPosition = playerModel.instance.transform.getTranslation(playerPosition);
