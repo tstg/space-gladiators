@@ -41,7 +41,8 @@ public class RenderSystem extends EntitySystem {
     private Environment environment;
 
     private static final float FOV = 67F;
-    public PerspectiveCamera perspectiveCamera;
+    public static PerspectiveCamera perspectiveCamera =
+            new PerspectiveCamera(FOV, Core.VIRTUAL_WIDTH, Core.VIRTUAL_HEIGHT);
     public PerspectiveCamera gunCamera;
     public Entity gun;
 
@@ -52,8 +53,12 @@ public class RenderSystem extends EntitySystem {
     private Vector3 position;
 
     public RenderSystem() {
-        perspectiveCamera = new PerspectiveCamera(FOV, Core.VIRTUAL_WIDTH, Core.VIRTUAL_HEIGHT);
-        perspectiveCamera.far = 10000f;
+//        perspectiveCamera = new PerspectiveCamera(FOV, Core.VIRTUAL_WIDTH, Core.VIRTUAL_HEIGHT);
+//        perspectiveCamera.far = 10000f;
+
+        setPerspectiveCamera();
+
+        System.out.println(perspectiveCamera);
 
         shadowLight = new DirectionalShadowLight(1024 * 5, 1024 * 5, 200f, 200f, 1f, 300f);
         shadowLight.set(0.8f, 0.8f, 0.f, 0, -0.1f, 0.1f);
@@ -68,11 +73,27 @@ public class RenderSystem extends EntitySystem {
         gunCamera.far = 100f;
 
         particleSystem = ParticleSystem.get();
-        BillboardParticleBatch billboardParticleBatch = new BillboardParticleBatch();
-        billboardParticleBatch.setCamera(perspectiveCamera);
-        particleSystem.add(billboardParticleBatch);
+        if (particleSystem.getBatches().size == 0) {
+            BillboardParticleBatch billboardParticleBatch = new BillboardParticleBatch();
+            billboardParticleBatch.setCamera(perspectiveCamera);
+            particleSystem.add(billboardParticleBatch);
+        }
 
         position = new Vector3();
+    }
+
+    private void setPerspectiveCamera() {
+        perspectiveCamera.far = 10000f;
+        PerspectiveCamera tempCam = new PerspectiveCamera(FOV, Core.VIRTUAL_WIDTH, Core.VIRTUAL_HEIGHT);
+
+        perspectiveCamera.up.set(tempCam.up);
+        perspectiveCamera.position.set(tempCam.position);
+        perspectiveCamera.view.set(tempCam.view);
+        perspectiveCamera.combined.set(tempCam.combined);
+        perspectiveCamera.direction.set(tempCam.direction);
+        perspectiveCamera.invProjectionView.set(tempCam.invProjectionView);
+        perspectiveCamera.near = tempCam.near;
+        perspectiveCamera.projection.set(tempCam.projection);
     }
 
 //    public RenderSystem(ModelBatch batch, Environment environment) {
