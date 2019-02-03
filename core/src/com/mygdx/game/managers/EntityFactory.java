@@ -157,6 +157,7 @@ public class EntityFactory {
         ModelLoader<?> modelLoader = new G3dModelLoader(new JsonReader());
         ModelData modelData = modelLoader.loadModelData(Gdx.files.internal("data/monster.g3dj"));
         if (enemyModel == null) {
+//            System.out.println("enemyModel == null");
             enemyModel = new Model(modelData, new TextureProvider.FileTextureProvider());
             // the model is much bigger than we need it to be
             for (Node node : enemyModel.nodes) {

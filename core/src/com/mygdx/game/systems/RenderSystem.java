@@ -13,11 +13,14 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
+import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.Core;
 import com.mygdx.game.Settings;
 import com.mygdx.game.components.AnimationComponent;
+import com.mygdx.game.components.EnemyComponent;
 import com.mygdx.game.components.GunComponent;
 import com.mygdx.game.components.ModelComponent;
+import com.mygdx.game.components.PlayerComponent;
 
 /**
  * Created by Anonym on 2019/1/30.
@@ -38,19 +41,19 @@ public class RenderSystem extends EntitySystem {
     public PerspectiveCamera gunCamera;
     public Entity gun;
 
-//    private DirectionalShadowLight shadowLight;
+    private DirectionalShadowLight shadowLight;
 
     public RenderSystem() {
         perspectiveCamera = new PerspectiveCamera(FOV, Core.VIRTUAL_WIDTH, Core.VIRTUAL_HEIGHT);
         perspectiveCamera.far = 10000f;
 
-//        shadowLight = new DirectionalShadowLight(1024 * 5, 1024 * 5, 200f, 200f, 1f, 300f);
-//        shadowLight.set(0.8f, 0.8f, 0.f, 0, -0.1f, 0.1f);
+        shadowLight = new DirectionalShadowLight(1024 * 5, 1024 * 5, 200f, 200f, 1f, 300f);
+        shadowLight.set(0.8f, 0.8f, 0.f, 0, -0.1f, 0.1f);
 
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.5f, 0.5f, 0.5f, 1f));
-//        environment.add(shadowLight);
-//        environment.shadowMap = shadowLight;
+        environment.add(shadowLight);
+        environment.shadowMap = shadowLight;
 
         batch = new ModelBatch();
         gunCamera = new PerspectiveCamera(FOV, Core.VIRTUAL_WIDTH, Core.VIRTUAL_HEIGHT);
@@ -70,11 +73,29 @@ public class RenderSystem extends EntitySystem {
 
     @Override
     public void update(float deltaTime) {
+        drawShadows(deltaTime);
         drawModels(deltaTime);
 //        for (int i = 0; i < entities.size(); i++) {
 //            ModelComponent mod = entities.get(i).getComponent(ModelComponent.class);
 //            batch.render(mod.instance, environment);
 //        }
+    }
+
+    private void drawShadows(float delta) {
+        shadowLight.begin(Vector3.Zero, perspectiveCamera.direction);
+        batch.begin(shadowLight.getCamera());
+        for (int x = 0; x < entities.size(); x++) {
+            if ((entities.get(x).getComponent(PlayerComponent.class) != null
+            || entities.get(x).getComponent(EnemyComponent.class) != null)) {
+                ModelComponent mod = entities.get(x).getComponent(ModelComponent.class);
+                batch.render(mod.instance);
+            }
+            if (entities.get(x).getComponent(AnimationComponent.class) != null && !Settings.Paused) {
+                entities.get(x).getComponent(AnimationComponent.class).update(delta);
+            }
+        }
+        batch.end();
+        shadowLight.end();
     }
 
     private void drawModels(float delta) {
@@ -97,7 +118,7 @@ public class RenderSystem extends EntitySystem {
         Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
         batch.begin(gunCamera);
         batch.render(gun.getComponent(ModelComponent.class).instance);
-        gun.getComponent(AnimationComponent.class).update(delta);
+//        gun.getComponent(AnimationComponent.class).update(delta);
         batch.end();
     }
 
