@@ -27,6 +27,7 @@ public class LeaderboardsScreen implements Screen {
     Image backgroundImage;
     TextButton backButton;
     Label label[];
+    boolean loaded;
 
     public LeaderboardsScreen(Core game) {
         this.game = game;
@@ -41,9 +42,11 @@ public class LeaderboardsScreen implements Screen {
         backgroundImage = new Image(new Texture(Gdx.files.internal("data/backgroundMN.png")));
         backButton = new TextButton("Back", Assets.skin);
         label = new Label[5];
-        for (int i = 0; i < label.length; i++) {
-            label[i] = new Label(i + 1 + ") " + Settings.highScores[i], Assets.skin);
-        }
+        label[0] = new Label("Loading scores from online leaderboards...", Assets.skin);
+        Settings.load(label);
+//        for (int i = 0; i < label.length; i++) {
+//            label[i] = new Label(i + 1 + ") " + Settings.highScores[i], Assets.skin);
+//        }
     }
 
     private void configureWidgets() {
@@ -52,13 +55,18 @@ public class LeaderboardsScreen implements Screen {
         backButton.setPosition(Core.VIRTUAL_WIDTH - backButton.getWidth() - 5, 5);
         stage.addActor(backgroundImage);
         stage.addActor(backButton);
-        int y = 0;
-        for (int i = 0; i < label.length; i++) {
-            label[i].setFontScale(3);
-            label[i].setPosition(15, Core.VIRTUAL_HEIGHT - label[i].getWidth() - 25 - y);
-            y += 96;
-            stage.addActor(label[i]);
-        }
+
+        label[0].setFontScale(3);
+        label[0].setPosition(15, Core.VIRTUAL_HEIGHT - label[0].getHeight() - 25);
+        stage.addActor(label[0]);
+
+//        int y = 0;
+//        for (int i = 0; i < label.length; i++) {
+//            label[i].setFontScale(3);
+//            label[i].setPosition(15, Core.VIRTUAL_HEIGHT - label[i].getWidth() - 25 - y);
+//            y += 96;
+//            stage.addActor(label[i]);
+//        }
     }
 
     private void setListeners() {
@@ -79,8 +87,22 @@ public class LeaderboardsScreen implements Screen {
     public void render(float delta) {
         /** Updates */
         stage.act(delta);
+        updateLeaderboard();
         /** Draw */
         stage.draw();
+    }
+
+    public void updateLeaderboard() {
+        if (label[1] != null && !loaded) {
+            loaded = true;
+            int y = 0;
+            for (int i = 0; i < label.length; i++) {
+                label[i].setFontScale(3);
+                label[i].setPosition(15, Core.VIRTUAL_HEIGHT - label[i].getHeight() - 25 - y);
+                y += 96;
+                stage.addActor(label[i]);
+            }
+        }
     }
 
     @Override
