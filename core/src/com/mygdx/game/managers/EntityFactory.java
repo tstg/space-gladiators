@@ -64,8 +64,8 @@ public class EntityFactory {
     private static Model playerModel;
     private static Model enemyModel;
     public static RenderSystem renderSystem;
-
     private static ModelComponent enemyModelComponent;
+    private static ModelData enemyModelData;
 //    private static Model boxModel;
 
     static {
@@ -164,8 +164,8 @@ public class EntityFactory {
 
         if (enemyModel == null) {
             ModelLoader<?> modelLoader = new G3dModelLoader(new JsonReader());
-            ModelData modelData = modelLoader.loadModelData(Gdx.files.internal("data/monster.g3dj"));
-            enemyModel = new Model(modelData, new TextureProvider.FileTextureProvider());
+            enemyModelData = modelLoader.loadModelData(Gdx.files.internal("data/monster.g3dj"));
+            enemyModel = new Model(enemyModelData, new TextureProvider.FileTextureProvider());
             // the model is much bigger than we need it to be
             for (Node node : enemyModel.nodes) {
                 node.scale.scl(0.0025f);
@@ -222,10 +222,11 @@ public class EntityFactory {
 
     public static Entity loadGun(float x, float y, float z) {
         ModelLoader<?> modelLoader = new G3dModelLoader(new JsonReader());
-        ModelData modelData = modelLoader.loadModelData(Gdx.files.internal("data/GUNMODEL.g3dj"));
+        ModelData modelData = modelLoader.loadModelData(Gdx.files.internal("data/gunmodel.g3dj"));
         Model model = new Model(modelData, new TextureProvider.FileTextureProvider());
         ModelComponent modelComponent = new ModelComponent(model, x, y, z);
         modelComponent.instance.transform.rotate(0, 1, 0, 180);
+//        modelComponent.instance.transform.translate(-2.5f, -2.5f, 4);
 //        modelComponent.instance.transform.scale(0.008f, 0.008f, 0.008f);
         modelComponent.instance.transform.scale(0.02f, 0.02f, 0.02f);
         Entity gunEntity = new Entity();
