@@ -5,6 +5,7 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.EntityListener;
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.ashley.core.Family;
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
@@ -15,6 +16,7 @@ import com.badlogic.gdx.physics.bullet.collision.ClosestRayResultCallback;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.mygdx.game.GameWorld;
 import com.mygdx.game.Settings;
+import com.mygdx.game.UI.ControllerWidget;
 import com.mygdx.game.UI.GameUI;
 import com.mygdx.game.components.AnimationComponent;
 import com.mygdx.game.components.CharacterComponent;
@@ -85,8 +87,16 @@ public class PlayerSystem extends EntitySystem implements EntityListener {
     }
 
     private void updateMovement(float delta) {
-        float deltaX = -Gdx.input.getDeltaX() * 0.5f;
-        float deltaY = -Gdx.input.getDeltaY() * 0.5f;
+        float deltaX = 0;
+        float deltaY = 0;
+        if (Gdx.app.getType() == Application.ApplicationType.Android) {
+            deltaX = -ControllerWidget.getWatchVector().x * 1.5f;
+            deltaY = ControllerWidget.getWatchVector().y * 1.5f;
+        } else {
+            deltaX = -Gdx.input.getDeltaX() * 0.5f;
+            deltaY = -Gdx.input.getDeltaY() * 0.5f;
+        }
+
         tmp.set(0, 0, 0);
         camera.rotate(camera.up, deltaX);
         tmp.set(camera.direction).crs(camera.up).nor();
@@ -99,19 +109,36 @@ public class PlayerSystem extends EntitySystem implements EntityListener {
         // along the x axis. Then, we rotate it with the transform of the model.
         characterComponent.characterDirection.set(-1, 0, 0).rot(modelComponent.instance.transform).nor();
         characterComponent.walkDirection.set(0, 0, 0);
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-            characterComponent.walkDirection.add(camera.direction);
+
+        if (Gdx.app.getType() == Application.ApplicationType.Android) {
+            if (ControllerWidget.getMovementVector().y > 0) {
+                characterComponent.walkDirection.add(camera.direction);
+            }
+            if (ControllerWidget.getMovementVector().y < 0) {
+                characterComponent.walkDirection.sub(camera.direction);
+            }
+            if (ControllerWidget.getMovementVector().x < 0) {
+                tmp.set(camera.direction).crs(camera.up).nor().scl(-1);
+            }
+            if (ControllerWidget.getMovementVector().x > 0) {
+                tmp.set(camera.direction).crs(camera.up).nor();
+            }
+        } else {
+            if (Gdx.input.isKeyPressed(Input.Keys.W)) {
+                characterComponent.walkDirection.add(camera.direction);
+            }
+            if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+                characterComponent.walkDirection.sub(camera.direction);
+            }
+            tmp.set(0, 0, 0);
+            if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+                tmp.set(camera.direction).crs(camera.up).nor().scl(-1);
+            }
+            if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+                tmp.set(camera.direction).crs(camera.up).nor().scl(1);
+            }
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-            characterComponent.walkDirection.sub(camera.direction);
-        }
-        tmp.set(0, 0, 0);
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-            tmp.set(camera.direction).crs(camera.up).nor().scl(-1);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-            tmp.set(camera.direction).crs(camera.up).nor().scl(1);
-        }
+
         characterComponent.walkDirection.add(tmp);
         characterComponent.walkDirection.scl(10f * delta);
         characterComponent.characterController.setWalkDirection(characterComponent.walkDirection);

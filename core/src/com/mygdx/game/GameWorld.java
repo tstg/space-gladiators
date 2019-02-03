@@ -48,9 +48,7 @@ public class GameWorld {
     private RenderSystem renderSystem;
 
     private static final float FOV = 67f;
-    private ModelBatch batch;
     private Environment environment;
-    private PerspectiveCamera cam;
 
     private GameUI gameUI;
 
@@ -76,7 +74,7 @@ public class GameWorld {
         setDebug();
 //        initEnvironment();
 //        initModelBatch();
-        initPersCamera();
+//        initPersCamera();
         addSystems(gameUI);
         addEntities();
     }
@@ -88,14 +86,14 @@ public class GameWorld {
         }
     }
 
-    private void initPersCamera() {
-        cam = new PerspectiveCamera(FOV, Core.VIRTUAL_WIDTH, Core.VIRTUAL_HEIGHT);
-        cam.position.set(30f, 40f, 30f);
-        cam.lookAt(0f, 0f, 0f);
-        cam.near = 1f;
-        cam.far = 300f;
-        cam.update();
-    }
+//    private void initPersCamera() {
+//        cam = new PerspectiveCamera(FOV, Core.VIRTUAL_WIDTH, Core.VIRTUAL_HEIGHT);
+//        cam.position.set(30f, 40f, 30f);
+//        cam.lookAt(0f, 0f, 0f);
+//        cam.near = 1f;
+//        cam.far = 300f;
+//        cam.update();
+//    }
 
     private void initEnvironment() {
         environment = new Environment();
@@ -103,9 +101,9 @@ public class GameWorld {
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
     }
 
-    private void initModelBatch() {
-        batch = new ModelBatch();
-    }
+//    private void initModelBatch() {
+//        batch = new ModelBatch();
+//    }
 
     private void addEntities() {
 //        createGround();
@@ -163,7 +161,6 @@ public class GameWorld {
 //        wallVertical.dispose();
 //        groundModel.dispose();
 //        batch.dispose();
-//        batch = null;
     }
 
     /* With the camera set we can now fill in the resize function as well */
